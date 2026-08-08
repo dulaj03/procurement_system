@@ -8,9 +8,9 @@
 
   <div class="topbar-right" *ngIf="currentUser">
     <!-- Branch Selector -->
-    <div class="branch-selector" *ngIf="currentUser.branch">
+    <div class="branch-selector" *ngIf="currentUser.branchName">
       <i class="pi pi-map-marker marker-icon"></i>
-      <span>{{ currentUser.branch.name }}</span>
+      <span>{{ currentUser.branchName }}</span>
     </div>
 
     <!-- Notifications -->

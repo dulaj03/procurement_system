@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap, map } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map, switchMap } from 'rxjs';
 import { ApiResponse, AuthResponse, LoginRequest, RegisterRequest, UserInfo } from '../models/models';
 import { environment } from '../../../environments/environment';
 
@@ -17,17 +17,33 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  login(request: LoginRequest): Observable<AuthResponse> {
+  login(request: LoginRequest): Observable<UserInfo> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API}/login`, request).pipe(
       map(res => res.data!),
-      tap(auth => this.storeTokens(auth))
+      tap(auth => this.storeTokens(auth)),
+      switchMap(() => this.fetchProfile())
     );
   }
 
-  register(request: RegisterRequest): Observable<AuthResponse> {
+  register(request: RegisterRequest): Observable<UserInfo> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.API}/register`, request).pipe(
       map(res => res.data!),
-      tap(auth => this.storeTokens(auth))
+      tap(auth => this.storeTokens(auth)),
+      switchMap(() => this.fetchProfile())
+    );
+  }
+
+  fetchProfile(): Observable<UserInfo> {
+    return this.http.get<ApiResponse<UserInfo>>(`${environment.apiUrl}/users/profile`).pipe(
+      map(res => res.data!),
+      tap(profile => {
+        const stored = this.currentUser;
+        if (stored) {
+          const updated = { ...stored, ...profile };
+          localStorage.setItem(this.USER_KEY, JSON.stringify(updated));
+          this.currentUserSubject.next(updated);
+        }
+      })
     );
   }
 

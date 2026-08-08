@@ -11,7 +11,7 @@ import { UserInfo } from '../../core/models/models';
   styleUrls: ['./topbar.component.scss']
 })
 export class TopbarComponent implements OnInit {
-  currentUser: any | null = null; // Let's support custom properties like branch
+  currentUser: UserInfo | null = null;
 
   constructor(private authService: AuthService) {}
 

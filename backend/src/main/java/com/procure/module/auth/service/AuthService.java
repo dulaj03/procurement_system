@@ -34,9 +34,14 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
+    private final com.procure.security.TokenBlacklistService tokenBlacklistService;
 
     @Value("${app.jwt.expiration-ms}")
     private long jwtExpirationMs;
+
+    public void logout(String token) {
+        tokenBlacklistService.blacklistToken(token);
+    }
 
     public AuthDtos.AuthResponse login(AuthDtos.LoginRequest request) {
         authenticationManager.authenticate(

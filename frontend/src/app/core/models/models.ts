@@ -49,6 +49,11 @@ export interface UserInfo {
   lastName: string;
   email: string;
   roles: string[];
+  permissions?: string[];
+  companyId?: string;
+  companyName?: string;
+  branchId?: string;
+  branchName?: string;
 }
 
 // ── Company ───────────────────────────────────────────────────
