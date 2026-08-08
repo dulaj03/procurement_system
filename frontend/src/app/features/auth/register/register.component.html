@@ -1,0 +1,136 @@
+<div class="login-container">
+  <div class="login-banner">
+    <div class="banner-content">
+      <div class="logo">
+        <i class="pi pi-shield banner-logo-icon"></i>
+        <span>Procure<span class="logo-highlight">ERP</span></span>
+      </div>
+      <h1>Create Your Account</h1>
+      <p>Join the procurement system to request items, track inventory status, check approvals, and generate orders.</p>
+    </div>
+  </div>
+
+  <div class="login-form-area">
+    <div class="form-wrapper animate-fade-in glass-card">
+      <div class="form-header">
+        <h2>Register Account</h2>
+        <p>Enter your details below to request access</p>
+      </div>
+
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="login-form">
+        <!-- Error Message -->
+        <div class="error-banner" *ngIf="errorMessage">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="firstName">First Name</label>
+            <input
+              id="firstName"
+              type="text"
+              pInputText
+              formControlName="firstName"
+              placeholder="John"
+              class="w-full"
+              [class.p-invalid]="submitted && f['firstName'].errors"
+            />
+            <small class="field-error" *ngIf="submitted && f['firstName'].errors?.['required']">
+              Required.
+            </small>
+          </div>
+
+          <div class="form-field">
+            <label for="lastName">Last Name</label>
+            <input
+              id="lastName"
+              type="text"
+              pInputText
+              formControlName="lastName"
+              placeholder="Doe"
+              class="w-full"
+              [class.p-invalid]="submitted && f['lastName'].errors"
+            />
+            <small class="field-error" *ngIf="submitted && f['lastName'].errors?.['required']">
+              Required.
+            </small>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label for="email">Email Address</label>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            placeholder="johndoe@procure.com"
+            class="w-full"
+            [class.p-invalid]="submitted && f['email'].errors"
+          />
+          <small class="field-error" *ngIf="submitted && f['email'].errors?.['required']">
+            Email is required.
+          </small>
+          <small class="field-error" *ngIf="submitted && f['email'].errors?.['email']">
+            Invalid email.
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            pInputText
+            formControlName="password"
+            placeholder="••••••••"
+            class="w-full"
+            [class.p-invalid]="submitted && f['password'].errors"
+          />
+          <small class="field-error" *ngIf="submitted && f['password'].errors?.['required']">
+            Password is required.
+          </small>
+          <small class="field-error" *ngIf="submitted && f['password'].errors?.['minlength']">
+            Must be at least 6 characters.
+          </small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-field">
+            <label for="phone">Phone (Optional)</label>
+            <input
+              id="phone"
+              type="text"
+              pInputText
+              formControlName="phone"
+              placeholder="+1234567890"
+              class="w-full"
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="employeeCode">Employee Code (Optional)</label>
+            <input
+              id="employeeCode"
+              type="text"
+              pInputText
+              formControlName="employeeCode"
+              placeholder="EMP-123"
+              class="w-full"
+            />
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="loading">
+          <i class="pi pi-spin pi-spinner" *ngIf="loading"></i>
+          <span *ngIf="!loading">Create Account</span>
+        </button>
+
+        <div class="form-footer">
+          <p>Already have an account? <a routerLink="/auth/login" class="signup-link">Login</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

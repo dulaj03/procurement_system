@@ -1,0 +1,33 @@
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="search-box">
+      <i class="pi pi-search search-icon"></i>
+      <input type="text" placeholder="Quick search (Ctrl + K)..." class="search-input" />
+    </div>
+  </div>
+
+  <div class="topbar-right" *ngIf="currentUser">
+    <!-- Branch Selector -->
+    <div class="branch-selector" *ngIf="currentUser.branch">
+      <i class="pi pi-map-marker marker-icon"></i>
+      <span>{{ currentUser.branch.name }}</span>
+    </div>
+
+    <!-- Notifications -->
+    <div class="topbar-icon-btn">
+      <i class="pi pi-bell notification-icon"></i>
+      <span class="badge">3</span>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="topbar-icon-btn">
+      <i class="pi pi-cog"></i>
+    </div>
+
+    <div class="user-profile-menu">
+      <div class="avatar-sm">
+        {{ currentUser.firstName[0] }}{{ currentUser.lastName[0] }}
+      </div>
+    </div>
+  </div>
+</div>

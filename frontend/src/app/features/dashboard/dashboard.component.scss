@@ -1,0 +1,210 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  .dashboard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-color);
+      letter-spacing: -0.5px;
+    }
+
+    p {
+      margin-top: 4px;
+    }
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+
+    .kpi-card {
+      background-color: #ffffff;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+
+      .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+
+        &.pr-icon {
+          background-color: rgba(37, 99, 235, 0.08);
+          color: var(--primary-color);
+        }
+
+        &.po-icon {
+          background-color: rgba(16, 185, 129, 0.08);
+          color: var(--success-color);
+        }
+
+        &.low-stock-icon {
+          background-color: rgba(245, 99, 11, 0.08);
+          color: var(--warning-color);
+        }
+
+        &.value-icon {
+          background-color: rgba(239, 68, 68, 0.08);
+          color: var(--danger-color);
+        }
+      }
+
+      .kpi-details {
+        display: flex;
+        flex-direction: column;
+
+        .kpi-value {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: var(--text-color);
+          line-height: 1.2;
+        }
+
+        .kpi-label {
+          font-size: 0.85rem;
+          color: var(--text-muted);
+          font-weight: 500;
+          margin-top: 4px;
+        }
+      }
+    }
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 32px;
+
+    .section-card {
+      background-color: #ffffff;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        h3 {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: var(--text-color);
+        }
+
+        .view-all-link {
+          font-size: 0.85rem;
+          color: var(--primary-color);
+          text-decoration: none;
+          font-weight: 600;
+
+          &:hover {
+            color: var(--primary-hover);
+          }
+        }
+      }
+
+      .card-content {
+        /* Tables & List items */
+        .badge {
+          display: inline-block;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+
+          /* Priority */
+          &.priority-low { background-color: #f1f5f9; color: #475569; }
+          &.priority-medium { background-color: rgba(37, 99, 235, 0.08); color: var(--primary-color); }
+          &.priority-high { background-color: rgba(245, 99, 11, 0.08); color: var(--warning-color); }
+          &.priority-urgent { background-color: rgba(239, 68, 68, 0.08); color: var(--danger-color); }
+
+          /* Status */
+          &.status-draft { background-color: #f1f5f9; color: #475569; }
+          &.status-submitted { background-color: rgba(37, 99, 235, 0.08); color: var(--primary-color); }
+          &.status-under_review { background-color: rgba(245, 99, 11, 0.08); color: var(--warning-color); }
+          &.status-approved { background-color: rgba(16, 185, 129, 0.08); color: var(--success-color); }
+          &.status-rejected { background-color: rgba(239, 68, 68, 0.08); color: var(--danger-color); }
+          &.status-converted_to_po { background-color: #e2e8f0; color: #1e293b; }
+        }
+
+        .alert-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+
+          .alert-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+
+            .alert-info {
+              display: flex;
+              flex-direction: column;
+
+              .item-name {
+                font-weight: 600;
+                font-size: 0.95rem;
+                color: var(--text-color);
+              }
+
+              .sku {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                margin-top: 2px;
+              }
+            }
+
+            .alert-numbers {
+              display: flex;
+              flex-direction: column;
+              text-align: right;
+
+              .current-stock {
+                font-weight: 700;
+                font-size: 0.95rem;
+
+                &.danger-text {
+                  color: var(--danger-color);
+                }
+              }
+
+              .reorder-level {
+                font-size: 0.8rem;
+                color: var(--text-muted);
+                margin-top: 2px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .dashboard-container {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

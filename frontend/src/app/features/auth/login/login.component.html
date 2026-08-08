@@ -1,0 +1,86 @@
+<div class="login-container">
+  <div class="login-banner">
+    <div class="banner-content">
+      <div class="logo">
+        <i class="pi pi-shield banner-logo-icon"></i>
+        <span>Procure<span class="logo-highlight">ERP</span></span>
+      </div>
+      <h1>Streamline Your Enterprise Procurement & Inventory</h1>
+      <p>Automate workflows, track real-time stock levels, manage approvals, and optimize purchase pipelines.</p>
+    </div>
+  </div>
+
+  <div class="login-form-area">
+    <div class="form-wrapper animate-fade-in glass-card">
+      <div class="form-header">
+        <h2>Welcome Back</h2>
+        <p>Please enter your credentials to log in</p>
+      </div>
+
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        <!-- Error Message -->
+        <div class="error-banner" *ngIf="errorMessage">
+          <i class="pi pi-exclamation-triangle"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="form-field">
+          <label for="email">Email Address</label>
+          <span class="p-input-icon-left w-full">
+            <i class="pi pi-envelope"></i>
+            <input
+              id="email"
+              type="email"
+              pInputText
+              formControlName="email"
+              placeholder="e.g., admin@procure.com"
+              class="w-full"
+              [class.p-invalid]="submitted && f['email'].errors"
+            />
+          </span>
+          <small class="field-error" *ngIf="submitted && f['email'].errors?.['required']">
+            Email is required.
+          </small>
+          <small class="field-error" *ngIf="submitted && f['email'].errors?.['email']">
+            Please enter a valid email.
+          </small>
+        </div>
+
+        <div class="form-field">
+          <div class="password-label">
+            <label for="password">Password</label>
+            <a href="javascript:void(0)" class="forgot-link">Forgot password?</a>
+          </div>
+          <span class="p-input-icon-left w-full">
+            <i class="pi pi-lock"></i>
+            <input
+              id="password"
+              type="password"
+              pInputText
+              formControlName="password"
+              placeholder="••••••••"
+              class="w-full"
+              [class.p-invalid]="submitted && f['password'].errors"
+            />
+          </span>
+          <small class="field-error" *ngIf="submitted && f['password'].errors?.['required']">
+            Password is required.
+          </small>
+        </div>
+
+        <div class="remember-me">
+          <p-checkbox formControlName="rememberMe" [binary]="true" label="Remember this device" id="rememberMe"></p-checkbox>
+        </div>
+
+        <button type="submit" class="submit-btn" [disabled]="loading">
+          <i class="pi pi-spin pi-spinner" *ngIf="loading"></i>
+          <span *ngIf="!loading">Sign In</span>
+        </button>
+
+        <div class="form-footer">
+          <p>Don't have an account? <a routerLink="/auth/register" class="signup-link">Register</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

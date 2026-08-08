@@ -1,0 +1,11 @@
+# ============================================================
+#  PROD PROFILE — overrides for production
+# ============================================================
+spring:
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.procure: INFO

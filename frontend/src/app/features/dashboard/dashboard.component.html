@@ -1,0 +1,119 @@
+<div class="dashboard-container animate-fade-in">
+  <div class="dashboard-header">
+    <div class="title-area">
+      <h1>Procurement Dashboard</h1>
+      <p class="text-muted">Real-time procurement KPIs, approval statuses, and inventory trends.</p>
+    </div>
+    <div class="action-area">
+      <button class="p-button p-button-primary hover-lift" (click)="onNewRequest()">
+        <i class="pi pi-plus mr-2"></i> New Purchase Request
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card glass-card hover-lift">
+      <div class="kpi-icon pr-icon">
+        <i class="pi pi-file"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-value">12</span>
+        <span class="kpi-label">Active PRs</span>
+      </div>
+    </div>
+
+    <div class="kpi-card glass-card hover-lift">
+      <div class="kpi-icon po-icon">
+        <i class="pi pi-shopping-bag"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-value">8</span>
+        <span class="kpi-label">Open POs</span>
+      </div>
+    </div>
+
+    <div class="kpi-card glass-card hover-lift">
+      <div class="kpi-icon low-stock-icon">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-value">4</span>
+        <span class="kpi-label">Low Stock Alerts</span>
+      </div>
+    </div>
+
+    <div class="kpi-card glass-card hover-lift">
+      <div class="kpi-icon value-icon">
+        <i class="pi pi-chart-line"></i>
+      </div>
+      <div class="kpi-details">
+        <span class="kpi-value">$24.5K</span>
+        <span class="kpi-label">Month Spend</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Section (Tables and Cards) -->
+  <div class="dashboard-grid">
+    <!-- Recent Purchase Requests -->
+    <div class="section-card glass-card">
+      <div class="card-header">
+        <h3>Recent Purchase Requests</h3>
+        <a routerLink="/purchase-requests" class="view-all-link">View All</a>
+      </div>
+      <div class="card-content">
+        <p-table [value]="recentRequests" [responsive]="true" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>PR Number</th>
+              <th>Title</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Amount</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-pr>
+            <tr>
+              <td><strong>{{ pr.prNumber }}</strong></td>
+              <td>{{ pr.title }}</td>
+              <td>
+                <span class="badge" [class]="'priority-' + pr.priority.toLowerCase()">
+                  {{ pr.priority }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class]="'status-' + pr.status.toLowerCase()">
+                  {{ pr.status }}
+                </span>
+              </td>
+              <td>{{ pr.totalAmount | currency }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+
+    <!-- Inventory / Supplier Alerts -->
+    <div class="section-card glass-card">
+      <div class="card-header">
+        <h3>Low Stock Alerts</h3>
+        <a routerLink="/inventory" class="view-all-link">Manage Stock</a>
+      </div>
+      <div class="card-content">
+        <div class="alert-list">
+          <div class="alert-item" *ngFor="let item of lowStockItems">
+            <div class="alert-info">
+              <span class="item-name">{{ item.productName }}</span>
+              <span class="sku">SKU: {{ item.sku }}</span>
+            </div>
+            <div class="alert-numbers">
+              <span class="current-stock danger-text">{{ item.quantity }} {{ item.unit }}</span>
+              <span class="reorder-level">Min: {{ item.minLevel }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

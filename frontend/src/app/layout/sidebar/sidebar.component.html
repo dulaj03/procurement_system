@@ -1,0 +1,36 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <i class="pi pi-shield logo-icon"></i>
+      <span class="logo-text">Procure<span class="logo-highlight">ERP</span></span>
+    </div>
+  </div>
+
+  <div class="sidebar-user" *ngIf="currentUser">
+    <div class="avatar">
+      {{ currentUser.firstName[0] }}{{ currentUser.lastName[0] }}
+    </div>
+    <div class="user-info">
+      <div class="name">{{ currentUser.firstName }} {{ currentUser.lastName }}</div>
+      <div class="role">{{ displayRole }}</div>
+    </div>
+  </div>
+
+  <div class="sidebar-menu">
+    <ul class="menu-list">
+      <li class="menu-item" *ngFor="let item of menuItems">
+        <a [routerLink]="[item.link]" routerLinkActive="active" class="menu-link" *ngIf="hasAccess(item)">
+          <i [class]="item.icon + ' menu-icon'"></i>
+          <span class="menu-text">{{ item.label }}</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="logout-btn" (click)="logout()">
+      <i class="pi pi-power-off btn-icon"></i>
+      <span>Log Out</span>
+    </button>
+  </div>
+</div>

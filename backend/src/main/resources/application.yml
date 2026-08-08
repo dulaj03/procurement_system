@@ -1,0 +1,122 @@
+# ============================================================
+#  APPLICATION CONFIG — COMMON (overridden per profile)
+# ============================================================
+spring:
+  application:
+    name: procurement-system
+  profiles:
+    active: ${APP_PROFILE:dev}
+
+  # ── Jackson ──────────────────────────────────────────────
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+
+  # ── JPA / Hibernate ──────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: validate          # Flyway manages schema
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          time_zone: UTC
+
+  # ── Flyway ───────────────────────────────────────────────
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # ── Data Source ──────────────────────────────────────────
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/procure_db}
+    username: ${DB_USERNAME:procure_user}
+    password: ${DB_PASSWORD:procure_pass}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+
+  # ── Redis ─────────────────────────────────────────────────
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 6000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
+
+  # ── Mail (Mailtrap for dev) ───────────────────────────────
+  mail:
+    host: ${MAIL_HOST:sandbox.smtp.mailtrap.io}
+    port: ${MAIL_PORT:2525}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# ── Server ───────────────────────────────────────────────────
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# ── Application Custom Properties ────────────────────────────
+app:
+  jwt:
+    secret: ${JWT_SECRET:c2VjcmV0LWtleS1mb3ItcHJvY3VyZW1lbnQtc3lzdGVtLWNoYW5nZS1pbi1wcm9k}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}         # 24h
+    refresh-expiration-ms: ${JWT_REFRESH_MS:604800000}   # 7d
+
+  aws:
+    region: ${AWS_REGION:us-east-1}
+    s3:
+      bucket-name: ${AWS_S3_BUCKET:procure-files}
+    ses:
+      from-email: ${AWS_SES_FROM:noreply@procure.com}
+
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:4200}
+
+  pagination:
+    default-page-size: 20
+    max-page-size: 100
+
+# ── Actuator ─────────────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# ── SpringDoc / Swagger ───────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  show-actuator: false
