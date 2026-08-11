@@ -1,0 +1,205 @@
+<p-toast></p-toast>
+
+<!-- ── Header ─────────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-title">
+    <i class="pi pi-file-edit"></i>
+    <div>
+      <h1>Purchase Requisitions</h1>
+      <p>Draft purchase requests, manage multi-item approvals, and track status</p>
+    </div>
+  </div>
+  <button pButton label="New Requisition" icon="pi pi-plus" class="btn-primary" (click)="openCreate()"></button>
+</div>
+
+<!-- ── Filters ────────────────────────────────────────────── -->
+<div class="filter-bar glass-card mb-3">
+  <span class="p-input-icon-left search-wrap">
+    <i class="pi pi-search"></i>
+    <input pInputText type="text" placeholder="Search by PR # or title..." [(ngModel)]="searchTerm" (ngModelChange)="loadPRs(0)" class="search-input" />
+  </span>
+
+  <p-dropdown [options]="statusOptions" [(ngModel)]="statusFilter" optionLabel="label" optionValue="value" placeholder="All Statuses" (onChange)="loadPRs(0)" [showClear]="true" class="filter-dropdown"></p-dropdown>
+
+  <span class="result-count">{{ totalRecords }} requisitions</span>
+</div>
+
+<!-- ── Table ──────────────────────────────────────────────── -->
+<div class="table-card glass-card">
+  <p-table [value]="prs" [loading]="loading" [lazy]="true" [paginator]="true" [rows]="pageSize" [totalRecords]="totalRecords" (onPage)="loadPRs($event.first / $event.rows)" [rowHover]="true" styleClass="p-datatable-sm">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>PR #</th>
+        <th>Title</th>
+        <th>Requester</th>
+        <th>Branch</th>
+        <th>Est. Total</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th class="actions-col">Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-pr>
+      <tr>
+        <td><code class="pr-num">{{ pr.prNumber }}</code></td>
+        <td><strong class="text-white">{{ pr.title }}</strong></td>
+        <td>{{ pr.requestedByName }}</td>
+        <td>{{ pr.branchName }}</td>
+        <td class="font-bold">{{ pr.totalAmount | currency }}</td>
+        <td><p-tag [value]="pr.priority" [severity]="getPrioritySeverity(pr.priority)"></p-tag></td>
+        <td><p-tag [value]="pr.status" [severity]="getStatusSeverity(pr.status)"></p-tag></td>
+        <td class="text-muted small-text">{{ pr.createdAt | date:'shortDate' }}</td>
+        <td class="actions-col">
+          <div class="action-buttons">
+            <button pButton icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" pTooltip="View / Approve" (click)="viewDetail(pr.id)"></button>
+            <button *ngIf="pr.status === 'DRAFT'" pButton icon="pi pi-send" class="p-button-text p-button-rounded p-button-success" pTooltip="Submit for Approval" (click)="submitForApproval(pr.id)"></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- ── Create PR Form Dialog ──────────────────────────────── -->
+<p-dialog [(visible)]="showFormDialog" header="Create Purchase Requisition" [modal]="true" [style]="{ width: '820px' }">
+  <form [formGroup]="prForm">
+    <div class="form-grid-2">
+      <div class="form-field full-width">
+        <label>Requisition Title *</label>
+        <input pInputText formControlName="title" placeholder="e.g. Q3 IT Hardware Upgrade" />
+      </div>
+
+      <div class="form-field">
+        <label>Priority</label>
+        <p-dropdown formControlName="priority" [options]="priorityOptions" optionLabel="label" optionValue="value"></p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label>Destination Branch *</label>
+        <p-dropdown formControlName="branchId" [options]="branchOptions" optionLabel="label" optionValue="value"></p-dropdown>
+      </div>
+
+      <div class="form-field full-width">
+        <label>Justification / Description</label>
+        <input pInputText formControlName="description" placeholder="Why are these items requested?" />
+      </div>
+    </div>
+
+    <p-divider align="left"><b>Requested Line Items</b></p-divider>
+
+    <div formArrayName="items">
+      <div *ngFor="let itemCtrl of itemsFormArray.controls; let i=index" [formGroupName]="i" class="item-row glass-inset mb-2">
+        <div class="item-grid">
+          <div class="form-field">
+            <label>Product Item *</label>
+            <p-dropdown formControlName="productId" [options]="products" optionLabel="name" optionValue="id" placeholder="Select Product" (onChange)="onProductSelect(i, $event.value)"></p-dropdown>
+          </div>
+
+          <div class="form-field">
+            <label>Quantity *</label>
+            <p-inputNumber formControlName="quantity" [min]="1"></p-inputNumber>
+          </div>
+
+          <div class="form-field">
+            <label>Est. Unit Price</label>
+            <p-inputNumber formControlName="estimatedUnitPrice" mode="currency" currency="USD" [min]="0"></p-inputNumber>
+          </div>
+
+          <div class="form-field">
+            <label>Subtotal</label>
+            <div class="row-subtotal font-bold">
+              {{ (itemsFormArray.at(i).get('quantity')?.value * itemsFormArray.at(i).get('estimatedUnitPrice')?.value) | currency }}
+            </div>
+          </div>
+
+          <div class="form-field actions-field">
+            <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" (click)="removeItemRow(i)"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-2 flex-between">
+      <button pButton label="Add Line Item" icon="pi pi-plus" class="p-button-outlined p-button-sm" (click)="addItemRow()"></button>
+      <div class="grand-total">
+        <span>Estimated Total: </span>
+        <strong class="text-green font-lg">{{ calculateTotal() | currency }}</strong>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined" (click)="showFormDialog = false"></button>
+    <button pButton label="Save Draft" icon="pi pi-save" class="btn-primary" [loading]="formLoading" (click)="savePR()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── PR Detail & Approval Modal ──────────────────────────── -->
+<p-dialog [(visible)]="showDetailDialog" header="Requisition Overview" [modal]="true" [style]="{ width: '700px' }">
+  <div *ngIf="selectedPR" class="detail-content">
+    <div class="flex-between mb-3">
+      <div>
+        <h2 class="m-0">{{ selectedPR.title }}</h2>
+        <code class="pr-num">{{ selectedPR.prNumber }}</code>
+      </div>
+      <div>
+        <p-tag [value]="selectedPR.status" [severity]="getStatusSeverity(selectedPR.status)"></p-tag>
+        <p-tag [value]="selectedPR.priority" [severity]="getPrioritySeverity(selectedPR.priority)" class="ml-2"></p-tag>
+      </div>
+    </div>
+
+    <div class="detail-grid glass-card p-3 mb-3">
+      <div><strong>Requester:</strong> {{ selectedPR.requestedByName }}</div>
+      <div><strong>Branch:</strong> {{ selectedPR.branchName }}</div>
+      <div><strong>Requested Date:</strong> {{ selectedPR.createdAt | date:'mediumDate' }}</div>
+      <div><strong>Estimated Total:</strong> <span class="text-green font-bold">{{ selectedPR.totalAmount | currency }}</span></div>
+      <div *ngIf="selectedPR.approvedByName"><strong>Manager Decision By:</strong> {{ selectedPR.approvedByName }}</div>
+      <div *ngIf="selectedPR.rejectionReason" class="full-width text-red"><strong>Rejection Reason:</strong> {{ selectedPR.rejectionReason }}</div>
+    </div>
+
+    <h4>Line Items</h4>
+    <p-table [value]="selectedPR.items" styleClass="p-datatable-sm mb-3">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Product</th>
+          <th>SKU</th>
+          <th>Qty</th>
+          <th>Est Price</th>
+          <th>Total</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td>{{ item.productName }}</td>
+          <td><code>{{ item.sku }}</code></td>
+          <td>{{ item.quantity }} {{ item.unitOfMeasure }}</td>
+          <td>{{ item.estimatedUnitPrice | currency }}</td>
+          <td class="font-bold">{{ item.estimatedTotalPrice | currency }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- Manager Decision Actions -->
+    <div *ngIf="selectedPR.status === 'SUBMITTED'" class="approval-panel glass-card p-3 flex-between">
+      <span><strong>Manager Action Required:</strong> Review requisition and make decision.</span>
+      <div class="flex-gap">
+        <button pButton label="Reject" icon="pi pi-times" class="p-button-danger" (click)="openRejectModal()"></button>
+        <button pButton label="Approve Request" icon="pi pi-check" class="p-button-success" (click)="approve(selectedPR.id)"></button>
+      </div>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- ── Rejection Reason Modal ─────────────────────────────── -->
+<p-dialog [(visible)]="showRejectDialog" header="Reject Purchase Requisition" [modal]="true" [style]="{ width: '400px' }">
+  <div class="form-field">
+    <label>Reason for Rejection *</label>
+    <textarea pInputTextarea [(ngModel)]="rejectReason" rows="3" placeholder="Provide feedback to requester..."></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined" (click)="showRejectDialog = false"></button>
+    <button pButton label="Confirm Rejection" class="p-button-danger" (click)="confirmReject()"></button>
+  </ng-template>
+</p-dialog>

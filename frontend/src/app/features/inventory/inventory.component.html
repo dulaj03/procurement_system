@@ -1,0 +1,177 @@
+<p-toast></p-toast>
+
+<!-- ── Header ─────────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-title">
+    <i class="pi pi-tags"></i>
+    <div>
+      <h1>Inventory & Warehouse Stock</h1>
+      <p>Real-time multi-branch stock levels, low-stock alerts, adjustments and audit ledger</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button pButton label="Transfer Stock" icon="pi pi-sort-alt" class="p-button-outlined" (click)="openTransferModal()"></button>
+    <button pButton label="Stock Adjustment" icon="pi pi-sliders-h" class="btn-primary" (click)="openAdjustModal()"></button>
+  </div>
+</div>
+
+<p-tabView styleClass="glass-tabview">
+  <!-- ── TAB 1: Stock Levels Grid ───────────────────────────── -->
+  <p-tabPanel header="Current Stock Levels" leftIcon="pi pi-list">
+    <div class="filter-bar glass-card mb-3">
+      <span class="p-input-icon-left search-wrap">
+        <i class="pi pi-search"></i>
+        <input pInputText type="text" placeholder="Search by item name, SKU, branch..." [(ngModel)]="searchTerm" class="search-input" />
+      </span>
+
+      <button pButton [label]="filterLowStockOnly ? 'Show All Items' : 'Low Stock Only'" [icon]="filterLowStockOnly ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'" [class]="filterLowStockOnly ? 'p-button-warning' : 'p-button-outlined p-button-secondary'" (click)="filterLowStockOnly = !filterLowStockOnly; loadInventory()"></button>
+    </div>
+
+    <div class="table-card glass-card">
+      <p-table [value]="getFilteredInventory()" [loading]="loading" [rowHover]="true" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Product Name</th>
+            <th>SKU</th>
+            <th>Branch / Warehouse</th>
+            <th>On Hand</th>
+            <th>Reserved</th>
+            <th>Available</th>
+            <th>Avg Cost</th>
+            <th>Stock Status</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr [class.low-stock-row]="item.lowStock">
+            <td><strong class="text-white">{{ item.productName }}</strong></td>
+            <td><code class="sku-code">{{ item.sku }}</code></td>
+            <td><i class="pi pi-building text-muted mr-1"></i> {{ item.branchName }}</td>
+            <td class="font-bold">{{ item.quantityOnHand }} {{ item.unitOfMeasure }}</td>
+            <td class="text-muted">{{ item.quantityReserved }} {{ item.unitOfMeasure }}</td>
+            <td>
+              <span class="font-bold" [class.text-green]="item.availableQuantity > 0" [class.text-red]="item.availableQuantity <= 0">
+                {{ item.availableQuantity }} {{ item.unitOfMeasure }}
+              </span>
+            </td>
+            <td>{{ (item.averageCost | currency) || '—' }}</td>
+            <td>
+              <p-tag *ngIf="item.lowStock" value="LOW STOCK" severity="danger" icon="pi pi-exclamation-triangle"></p-tag>
+              <p-tag *ngIf="!item.lowStock" value="IN STOCK" severity="success"></p-tag>
+            </td>
+            <td class="actions-col">
+              <div class="action-buttons">
+                <button pButton icon="pi pi-sliders-h" class="p-button-text p-button-rounded p-button-warning" pTooltip="Adjust Qty" (click)="openAdjustModal(item)"></button>
+                <button pButton icon="pi pi-sort-alt" class="p-button-text p-button-rounded p-button-info" pTooltip="Transfer" (click)="openTransferModal(item)"></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9" class="empty-state">
+              <i class="pi pi-inbox empty-icon"></i>
+              <p>No inventory records found.</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+
+  <!-- ── TAB 2: Movement Audit Ledger ───────────────────────── -->
+  <p-tabPanel header="Stock Movement Ledger" leftIcon="pi pi-history">
+    <div class="table-card glass-card">
+      <p-table [value]="movements" [loading]="movementLoading" [rowHover]="true" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Date & Time</th>
+            <th>Product</th>
+            <th>SKU</th>
+            <th>Type</th>
+            <th>Quantity</th>
+            <th>From Branch</th>
+            <th>To Branch</th>
+            <th>Ref #</th>
+            <th>Notes</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-m>
+          <tr>
+            <td class="text-muted">{{ m.createdAt | date:'medium' }}</td>
+            <td class="font-semibold">{{ m.productName }}</td>
+            <td><code>{{ m.sku }}</code></td>
+            <td><p-tag [value]="m.movementType" [severity]="getMovementBadgeClass(m.movementType)"></p-tag></td>
+            <td class="font-bold">{{ m.quantity }}</td>
+            <td>{{ m.fromBranch || '—' }}</td>
+            <td>{{ m.toBranch || '—' }}</td>
+            <td><span class="ref-chip">{{ m.referenceNumber || '—' }}</span></td>
+            <td class="text-muted small-text">{{ m.notes || '—' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </p-tabPanel>
+</p-tabView>
+
+<!-- ── Stock Adjust Modal ─────────────────────────────────── -->
+<p-dialog [(visible)]="showAdjustDialog" header="Manual Stock Adjustment" [modal]="true" [style]="{ width: '480px' }">
+  <form [formGroup]="adjustForm" (ngSubmit)="submitAdjust()">
+    <div class="form-field mb-3">
+      <label>Product *</label>
+      <p-dropdown formControlName="productId" [options]="products" optionLabel="name" optionValue="id" placeholder="Select Product" [filter]="true"></p-dropdown>
+    </div>
+    <div class="form-field mb-3">
+      <label>Branch / Warehouse *</label>
+      <p-dropdown formControlName="branchId" [options]="branchOptions" optionLabel="label" optionValue="value" placeholder="Select Branch"></p-dropdown>
+    </div>
+    <div class="form-field mb-3">
+      <label>Adjustment Quantity (+ to add, - to reduce) *</label>
+      <p-inputNumber formControlName="quantity" placeholder="e.g. +10 or -5"></p-inputNumber>
+    </div>
+    <div class="form-field mb-3">
+      <label>Reason / Audit Note *</label>
+      <input pInputText formControlName="reason" placeholder="e.g. Physical inventory reconciliation" />
+    </div>
+    <div class="form-field mb-3">
+      <label>Reference Number</label>
+      <input pInputText formControlName="referenceNumber" placeholder="e.g. AUDIT-2026-08" />
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined" (click)="showAdjustDialog = false"></button>
+    <button pButton label="Post Adjustment" icon="pi pi-check" class="btn-primary" [loading]="formLoading" (click)="submitAdjust()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Stock Transfer Modal ───────────────────────────────── -->
+<p-dialog [(visible)]="showTransferDialog" header="Branch Stock Transfer" [modal]="true" [style]="{ width: '500px' }">
+  <form [formGroup]="transferForm" (ngSubmit)="submitTransfer()">
+    <div class="form-field mb-3">
+      <label>Product *</label>
+      <p-dropdown formControlName="productId" [options]="products" optionLabel="name" optionValue="id" placeholder="Select Product" [filter]="true"></p-dropdown>
+    </div>
+    <div class="form-field mb-3">
+      <label>From Branch (Source) *</label>
+      <p-dropdown formControlName="fromBranchId" [options]="branchOptions" optionLabel="label" optionValue="value" placeholder="Select Source Branch"></p-dropdown>
+    </div>
+    <div class="form-field mb-3">
+      <label>To Branch (Destination) *</label>
+      <p-dropdown formControlName="toBranchId" [options]="branchOptions" optionLabel="label" optionValue="value" placeholder="Select Destination Branch"></p-dropdown>
+    </div>
+    <div class="form-field mb-3">
+      <label>Transfer Quantity *</label>
+      <p-inputNumber formControlName="quantity" [min]="1" placeholder="Units to transfer"></p-inputNumber>
+    </div>
+    <div class="form-field mb-3">
+      <label>Transfer Notes</label>
+      <input pInputText formControlName="notes" placeholder="Reason for inter-branch transfer..." />
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined" (click)="showTransferDialog = false"></button>
+    <button pButton label="Execute Transfer" icon="pi pi-sort-alt" class="btn-primary" [loading]="formLoading" (click)="submitTransfer()"></button>
+  </ng-template>
+</p-dialog>

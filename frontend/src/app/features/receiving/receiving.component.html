@@ -1,0 +1,172 @@
+<p-toast></p-toast>
+
+<!-- ── Header ─────────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-title">
+    <i class="pi pi-inbox"></i>
+    <div>
+      <h1>Goods Receiving (GRN)</h1>
+      <p>Inspect incoming shipments against POs, record batch details, and post updates to stock levels</p>
+    </div>
+  </div>
+  <button pButton label="Receive Goods" icon="pi pi-plus" class="btn-primary" (click)="openReceiveDialog()"></button>
+</div>
+
+<!-- ── Filters ────────────────────────────────────────────── -->
+<div class="filter-bar glass-card mb-3">
+  <span class="p-input-icon-left search-wrap">
+    <i class="pi pi-search"></i>
+    <input pInputText type="text" placeholder="Search by GRN # or PO #..." [(ngModel)]="searchTerm" (ngModelChange)="loadGRNs(0)" class="search-input" />
+  </span>
+
+  <span class="result-count">{{ totalRecords }} GRN records</span>
+</div>
+
+<!-- ── Table ──────────────────────────────────────────────── -->
+<div class="table-card glass-card">
+  <p-table [value]="grns" [loading]="loading" [lazy]="true" [paginator]="true" [rows]="pageSize" [totalRecords]="totalRecords" (onPage)="loadGRNs($event.first / $event.rows)" [rowHover]="true" styleClass="p-datatable-sm">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>GRN #</th>
+        <th>PO #</th>
+        <th>Supplier</th>
+        <th>Branch</th>
+        <th>Receipt Date</th>
+        <th>Delivery Note #</th>
+        <th>Status</th>
+        <th class="actions-col">Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-grn>
+      <tr>
+        <td><code class="grn-num">{{ grn.grnNumber }}</code></td>
+        <td><code>{{ grn.poNumber }}</code></td>
+        <td><strong class="text-white">{{ grn.supplierName }}</strong></td>
+        <td>{{ grn.branchName }}</td>
+        <td>{{ grn.receiptDate | date:'mediumDate' }}</td>
+        <td>{{ grn.deliveryNoteNumber || '—' }}</td>
+        <td><p-tag value="POSTED" severity="success" icon="pi pi-check-circle"></p-tag></td>
+        <td class="actions-col">
+          <button pButton icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info" pTooltip="View Inspection Record" (click)="viewDetail(grn.id)"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- ── Receive Goods Dialog ───────────────────────────────── -->
+<p-dialog [(visible)]="showReceiveDialog" header="Receive Goods against Purchase Order" [modal]="true" [style]="{ width: '850px' }">
+  <form [formGroup]="grnForm">
+    <div class="form-grid-2">
+      <div class="form-field full-width">
+        <label>Select Purchase Order *</label>
+        <p-dropdown formControlName="purchaseOrderId" [options]="openPOs" optionLabel="poNumber" optionValue="id" placeholder="Select Issued PO to receive against..." [filter]="true" (onChange)="onPOSelected($event.value)"></p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label>Receiving Branch *</label>
+        <p-dropdown formControlName="branchId" [options]="branchOptions" optionLabel="label" optionValue="value"></p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label>Receipt Date *</label>
+        <input pInputText type="date" formControlName="receiptDate" />
+      </div>
+
+      <div class="form-field">
+        <label>Supplier Invoice #</label>
+        <input pInputText formControlName="supplierInvoiceNumber" placeholder="e.g. INV-9908" />
+      </div>
+
+      <div class="form-field">
+        <label>Delivery Note / Waybill #</label>
+        <input pInputText formControlName="deliveryNoteNumber" placeholder="e.g. DN-4401" />
+      </div>
+    </div>
+
+    <p-divider align="left"><b>Receiving & Inspection Quantities</b></p-divider>
+
+    <div *ngIf="itemsFormArray.length > 0" formArrayName="items">
+      <div *ngFor="let itemCtrl of itemsFormArray.controls; let i=index" [formGroupName]="i" class="item-row glass-inset mb-2">
+        <div class="item-header flex-between mb-1">
+          <strong>{{ itemCtrl.get('productName')?.value }} ({{ itemCtrl.get('sku')?.value }})</strong>
+        </div>
+        <div class="item-grid-receive">
+          <div class="form-field">
+            <label>Qty Received</label>
+            <p-inputNumber formControlName="quantityReceived" [min]="0"></p-inputNumber>
+          </div>
+
+          <div class="form-field">
+            <label>Qty Accepted *</label>
+            <p-inputNumber formControlName="quantityAccepted" [min]="0"></p-inputNumber>
+          </div>
+
+          <div class="form-field">
+            <label>Qty Rejected</label>
+            <p-inputNumber formControlName="quantityRejected" [min]="0"></p-inputNumber>
+          </div>
+
+          <div class="form-field">
+            <label>Batch / Lot #</label>
+            <input pInputText formControlName="batchNumber" placeholder="e.g. BATCH-2026A" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="itemsFormArray.length === 0" class="empty-po-notice text-muted">
+      Select a valid issued Purchase Order above to populate expected line items for receiving inspection.
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined" (click)="showReceiveDialog = false"></button>
+    <button pButton label="Post GRN & Update Stock" icon="pi pi-check-circle" class="btn-primary" [loading]="formLoading" [disabled]="itemsFormArray.length === 0" (click)="submitGRN()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Detail View Modal ──────────────────────────────────── -->
+<p-dialog [(visible)]="showDetailDialog" header="Goods Receipt Note Details" [modal]="true" [style]="{ width: '700px' }">
+  <div *ngIf="selectedGRN" class="detail-content">
+    <div class="flex-between mb-3">
+      <div>
+        <h2 class="m-0">{{ selectedGRN.grnNumber }}</h2>
+        <span>PO Reference: <code>{{ selectedGRN.poNumber }}</code></span>
+      </div>
+      <p-tag value="POSTED TO STOCK" severity="success" icon="pi pi-check-circle"></p-tag>
+    </div>
+
+    <div class="detail-grid glass-card p-3 mb-3">
+      <div><strong>Supplier:</strong> {{ selectedGRN.supplierName }}</div>
+      <div><strong>Branch:</strong> {{ selectedGRN.branchName }}</div>
+      <div><strong>Receipt Date:</strong> {{ selectedGRN.receiptDate | date:'mediumDate' }}</div>
+      <div><strong>Received By:</strong> {{ selectedGRN.receivedByName }}</div>
+      <div *ngIf="selectedGRN.deliveryNoteNumber"><strong>Delivery Note:</strong> {{ selectedGRN.deliveryNoteNumber }}</div>
+      <div *ngIf="selectedGRN.supplierInvoiceNumber"><strong>Supplier Invoice:</strong> {{ selectedGRN.supplierInvoiceNumber }}</div>
+    </div>
+
+    <h4>Received Line Inspection</h4>
+    <p-table [value]="selectedGRN.items" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Product</th>
+          <th>Received</th>
+          <th>Accepted</th>
+          <th>Rejected</th>
+          <th>Batch #</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td>{{ item.productName }}</td>
+          <td>{{ item.quantityReceived }}</td>
+          <td class="text-green font-bold">{{ item.quantityAccepted }}</td>
+          <td [class.text-red]="item.quantityRejected > 0">{{ item.quantityRejected || 0 }}</td>
+          <td><code>{{ item.batchNumber || 'N/A' }}</code></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</p-dialog>

@@ -1,7 +1,7 @@
 package com.procure.module.invoice.entity;
 
 import com.procure.common.audit.BaseEntity;
-import com.procure.module.purchase.order.entity.PurchaseOrder;
+import com.procure.module.purchase.entity.PurchaseOrder;
 import com.procure.module.supplier.entity.Supplier;
 import jakarta.persistence.*;
 import lombok.*;

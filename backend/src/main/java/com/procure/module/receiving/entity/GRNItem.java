@@ -2,7 +2,7 @@ package com.procure.module.receiving.entity;
 
 import com.procure.common.audit.BaseEntity;
 import com.procure.module.product.entity.Product;
-import com.procure.module.purchase.order.entity.PurchaseOrderItem;
+import com.procure.module.purchase.entity.PurchaseOrderItem;
 import jakarta.persistence.*;
 import lombok.*;
 
