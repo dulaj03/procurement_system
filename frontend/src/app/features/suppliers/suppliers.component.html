@@ -1,0 +1,387 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<!-- ── Page Header ──────────────────────────────────────────── -->
+<div class="page-header">
+  <div class="page-title">
+    <i class="pi pi-building"></i>
+    <div>
+      <h1>Suppliers</h1>
+      <p>Manage supplier profiles, contacts and ratings</p>
+    </div>
+  </div>
+  <button pButton label="New Supplier" icon="pi pi-plus"
+          class="btn-primary" (click)="openCreate()">
+  </button>
+</div>
+
+<!-- ── Filter Bar ───────────────────────────────────────────── -->
+<div class="filter-bar glass-card">
+  <span class="p-input-icon-left search-wrap">
+    <i class="pi pi-search"></i>
+    <input pInputText type="text" placeholder="Search by name, code or email..."
+           [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+           class="search-input"/>
+  </span>
+
+  <p-dropdown [options]="statusOptions" [(ngModel)]="statusFilter"
+              optionLabel="label" optionValue="value"
+              placeholder="Filter by status" class="status-filter"
+              (onChange)="onStatusFilter()" [showClear]="true">
+  </p-dropdown>
+
+  <span class="result-count">
+    {{ totalRecords }} supplier{{ totalRecords !== 1 ? 's' : '' }} found
+  </span>
+</div>
+
+<!-- ── Table ────────────────────────────────────────────────── -->
+<div class="table-card glass-card">
+  <p-table
+    [value]="suppliers"
+    [loading]="loading"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="totalRecords"
+    (onPage)="onPageChange($event)"
+    [rowHover]="true"
+    dataKey="id"
+    styleClass="p-datatable-sm">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Supplier</th>
+        <th>Contact Info</th>
+        <th>Location</th>
+        <th>Rating</th>
+        <th>Status</th>
+        <th>Contacts</th>
+        <th class="actions-col">Actions</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-s>
+      <tr class="table-row">
+        <!-- Supplier name + code -->
+        <td>
+          <div class="supplier-cell">
+            <div class="supplier-avatar">{{ s.name.charAt(0).toUpperCase() }}</div>
+            <div>
+              <div class="supplier-name">{{ s.name }}</div>
+              <span class="supplier-code">{{ s.code }}</span>
+            </div>
+          </div>
+        </td>
+
+        <!-- Contact info -->
+        <td>
+          <div class="contact-info">
+            <span *ngIf="s.email" class="info-row">
+              <i class="pi pi-envelope"></i> {{ s.email }}
+            </span>
+            <span *ngIf="s.phone" class="info-row">
+              <i class="pi pi-phone"></i> {{ s.phone }}
+            </span>
+          </div>
+        </td>
+
+        <!-- Location -->
+        <td>
+          <span *ngIf="s.city || s.country" class="location">
+            <i class="pi pi-map-marker"></i>
+            {{ [s.city, s.country] | join:', ' }}
+          </span>
+          <span *ngIf="!s.city && !s.country" class="text-muted">—</span>
+        </td>
+
+        <!-- Rating -->
+        <td>
+          <p-rating [ngModel]="s.rating ?? 0" [readonly]="false" [cancel]="false" [stars]="5"
+                    (onRate)="onRate(s.id, $event.value)"
+                    styleClass="supplier-rating">
+          </p-rating>
+        </td>
+
+        <!-- Status badge -->
+        <td>
+          <p-tag [value]="s.status" [severity]="getStatusSeverity(s.status)"></p-tag>
+        </td>
+
+        <!-- Contact count chip -->
+        <td>
+          <p-chip [label]="s.contactCount + ' contact' + (s.contactCount !== 1 ? 's' : '')"
+                  icon="pi pi-users" styleClass="contact-chip">
+          </p-chip>
+        </td>
+
+        <!-- Actions -->
+        <td class="actions-col">
+          <div class="action-buttons">
+            <button pButton icon="pi pi-eye" class="p-button-text p-button-rounded p-button-info"
+                    pTooltip="View details" (click)="viewDetail(s.id)">
+            </button>
+            <button pButton icon="pi pi-pencil" class="p-button-text p-button-rounded p-button-warning"
+                    pTooltip="Edit" (click)="openEdit(s.id)">
+            </button>
+            <button pButton icon="pi pi-trash" class="p-button-text p-button-rounded p-button-danger"
+                    pTooltip="Delete" (click)="confirmDelete(s)">
+            </button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="empty-state">
+          <i class="pi pi-building empty-icon"></i>
+          <p>No suppliers found.</p>
+          <button pButton label="Add First Supplier" icon="pi pi-plus"
+                  class="btn-primary" (click)="openCreate()">
+          </button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- ══ CREATE / EDIT DIALOG ═══════════════════════════════════ -->
+<p-dialog [(visible)]="showFormDialog"
+          [header]="isEditMode ? 'Edit Supplier' : 'New Supplier'"
+          [modal]="true" [draggable]="false"
+          [style]="{ width: '780px' }"
+          styleClass="supplier-dialog">
+
+  <form [formGroup]="supplierForm" (ngSubmit)="submitForm()">
+
+    <!-- Basic Info -->
+    <div class="form-section">
+      <h3 class="section-title"><i class="pi pi-info-circle"></i> Basic Information</h3>
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Supplier Name *</label>
+          <input pInputText formControlName="name" placeholder="e.g. Tech Supplies Ltd" />
+          <small class="error" *ngIf="isInvalid('name')">Name is required</small>
+        </div>
+        <div class="form-field">
+          <label>Supplier Code *</label>
+          <input pInputText formControlName="code" placeholder="e.g. TECH001" class="uppercase-input" />
+          <small class="error" *ngIf="isInvalid('code')">Code is required</small>
+        </div>
+        <div class="form-field">
+          <label>Email</label>
+          <input pInputText formControlName="email" placeholder="supplier@example.com" />
+          <small class="error" *ngIf="isInvalid('email')">Invalid email format</small>
+        </div>
+        <div class="form-field">
+          <label>Phone</label>
+          <input pInputText formControlName="phone" placeholder="+1 555 000 0000" />
+        </div>
+        <div class="form-field">
+          <label>Website</label>
+          <input pInputText formControlName="website" placeholder="https://..." />
+        </div>
+        <div class="form-field">
+          <label>Status</label>
+          <p-dropdown formControlName="status"
+                      [options]="[{label:'Active',value:'ACTIVE'},{label:'Inactive',value:'INACTIVE'},{label:'Blacklisted',value:'BLACKLISTED'}]"
+                      optionLabel="label" optionValue="value">
+          </p-dropdown>
+        </div>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Address -->
+    <div class="form-section">
+      <h3 class="section-title"><i class="pi pi-map"></i> Address</h3>
+      <div class="form-field full-width">
+        <label>Street Address</label>
+        <input pInputText formControlName="address" placeholder="123 Main Street" />
+      </div>
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>City</label>
+          <input pInputText formControlName="city" placeholder="City" />
+        </div>
+        <div class="form-field">
+          <label>Country</label>
+          <input pInputText formControlName="country" placeholder="Country" />
+        </div>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Financial -->
+    <div class="form-section">
+      <h3 class="section-title"><i class="pi pi-dollar"></i> Financial Details</h3>
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Tax Number</label>
+          <input pInputText formControlName="taxNumber" placeholder="Tax/VAT number" />
+        </div>
+        <div class="form-field">
+          <label>Registration Number</label>
+          <input pInputText formControlName="registrationNumber" placeholder="Business reg. no." />
+        </div>
+        <div class="form-field">
+          <label>Payment Terms</label>
+          <input pInputText formControlName="paymentTerms" placeholder="e.g. Net 30" />
+        </div>
+        <div class="form-field">
+          <label>Credit Limit</label>
+          <p-inputNumber formControlName="creditLimit" mode="currency" currency="USD"
+                         placeholder="0.00" [min]="0">
+          </p-inputNumber>
+        </div>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Contacts -->
+    <div class="form-section">
+      <div class="section-header-row">
+        <h3 class="section-title"><i class="pi pi-users"></i> Contact Persons</h3>
+        <button type="button" pButton label="Add Contact" icon="pi pi-plus"
+                class="p-button-outlined p-button-sm" (click)="addContactRow()">
+        </button>
+      </div>
+
+      <div formArrayName="contacts">
+        <div *ngFor="let ctrl of contacts.controls; let i = index"
+             [formGroupName]="i" class="contact-row glass-inset">
+          <div class="form-grid-3">
+            <div class="form-field">
+              <label>Name *</label>
+              <input pInputText formControlName="name" placeholder="Full name" />
+            </div>
+            <div class="form-field">
+              <label>Designation</label>
+              <input pInputText formControlName="designation" placeholder="Title / Role" />
+            </div>
+            <div class="form-field">
+              <label>Email</label>
+              <input pInputText formControlName="email" placeholder="contact@..." />
+            </div>
+            <div class="form-field">
+              <label>Phone</label>
+              <input pInputText formControlName="phone" placeholder="+1 ..." />
+            </div>
+            <div class="form-field checkbox-field">
+              <p-checkbox formControlName="primary" [binary]="true" label="Primary contact"></p-checkbox>
+            </div>
+            <div class="form-field remove-field">
+              <button type="button" pButton icon="pi pi-trash"
+                      class="p-button-text p-button-danger p-button-sm"
+                      (click)="removeContactRow(i)">
+              </button>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="contacts.length === 0" class="no-contacts">
+          No contacts added. Click "Add Contact" to add one.
+        </div>
+      </div>
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" icon="pi pi-times"
+            class="p-button-outlined" (click)="showFormDialog = false">
+    </button>
+    <button pButton [label]="isEditMode ? 'Save Changes' : 'Create Supplier'"
+            icon="pi pi-check" class="btn-primary"
+            [loading]="formLoading" (click)="submitForm()">
+    </button>
+  </ng-template>
+</p-dialog>
+
+<!-- ══ DETAIL DIALOG ══════════════════════════════════════════ -->
+<p-dialog [(visible)]="showDetailDialog"
+          header="Supplier Details"
+          [modal]="true" [draggable]="false"
+          [style]="{ width: '620px' }"
+          styleClass="detail-dialog">
+
+  <div *ngIf="selectedSupplier" class="detail-content">
+    <!-- Header row -->
+    <div class="detail-header">
+      <div class="detail-avatar">{{ selectedSupplier.name.charAt(0) }}</div>
+      <div>
+        <h2>{{ selectedSupplier.name }}</h2>
+        <p-tag [value]="selectedSupplier.code" severity="info"></p-tag>
+        <p-tag [value]="selectedSupplier.status"
+               [severity]="getStatusSeverity(selectedSupplier.status)"
+               styleClass="ml-2">
+        </p-tag>
+      </div>
+    </div>
+
+    <p-rating [ngModel]="selectedSupplier.rating ?? 0" [readonly]="true" [cancel]="false" [stars]="5"
+              styleClass="detail-rating">
+    </p-rating>
+
+    <p-divider></p-divider>
+
+    <div class="detail-grid">
+      <div class="detail-item" *ngIf="selectedSupplier.email">
+        <i class="pi pi-envelope"></i>
+        <span>{{ selectedSupplier.email }}</span>
+      </div>
+      <div class="detail-item" *ngIf="selectedSupplier.phone">
+        <i class="pi pi-phone"></i>
+        <span>{{ selectedSupplier.phone }}</span>
+      </div>
+      <div class="detail-item" *ngIf="selectedSupplier.website">
+        <i class="pi pi-globe"></i>
+        <a [href]="selectedSupplier.website" target="_blank">{{ selectedSupplier.website }}</a>
+      </div>
+      <div class="detail-item" *ngIf="selectedSupplier.city || selectedSupplier.country">
+        <i class="pi pi-map-marker"></i>
+        <span>{{ [selectedSupplier.city, selectedSupplier.country].filter(Boolean).join(', ') }}</span>
+      </div>
+      <div class="detail-item" *ngIf="selectedSupplier.paymentTerms">
+        <i class="pi pi-credit-card"></i>
+        <span>{{ selectedSupplier.paymentTerms }}</span>
+      </div>
+      <div class="detail-item" *ngIf="selectedSupplier.creditLimit">
+        <i class="pi pi-dollar"></i>
+        <span>{{ selectedSupplier.creditLimit | currency }}</span>
+      </div>
+    </div>
+
+    <!-- Contacts -->
+    <p-divider></p-divider>
+    <h3 class="section-title"><i class="pi pi-users"></i> Contact Persons</h3>
+    <div *ngIf="selectedSupplier.contacts?.length; else noContacts" class="contact-list">
+      <div *ngFor="let c of selectedSupplier.contacts" class="contact-card glass-inset">
+        <div class="contact-name">
+          {{ c.name }}
+          <p-tag *ngIf="c.primary" value="Primary" severity="info" styleClass="ml-2"></p-tag>
+        </div>
+        <div class="contact-details">
+          <span *ngIf="c.designation">{{ c.designation }}</span>
+          <span *ngIf="c.email"><i class="pi pi-envelope"></i> {{ c.email }}</span>
+          <span *ngIf="c.phone"><i class="pi pi-phone"></i> {{ c.phone }}</span>
+        </div>
+      </div>
+    </div>
+    <ng-template #noContacts>
+      <p class="text-muted">No contacts registered.</p>
+    </ng-template>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Edit" icon="pi pi-pencil" class="p-button-outlined"
+            (click)="showDetailDialog = false; openEdit(selectedSupplier!.id)">
+    </button>
+    <button pButton label="Close" icon="pi pi-times"
+            class="btn-primary" (click)="showDetailDialog = false">
+    </button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,274 @@
+// ── Page layout ──────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+
+  .page-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    > .pi { font-size: 2rem; color: var(--primary-400); }
+
+    h1 { margin: 0; font-size: 1.6rem; font-weight: 700; color: var(--surface-0); }
+    p  { margin: 0; font-size: 0.85rem; color: var(--text-color-secondary); }
+  }
+}
+
+// ── Filter bar ───────────────────────────────────────────────────
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+
+  .search-wrap {
+    flex: 1;
+    min-width: 240px;
+
+    .search-input { width: 100%; }
+  }
+
+  .status-filter { width: 180px; }
+
+  .result-count {
+    margin-left: auto;
+    font-size: 0.82rem;
+    color: var(--text-color-secondary);
+    white-space: nowrap;
+  }
+}
+
+// ── Table card ───────────────────────────────────────────────────
+.table-card { padding: 0; overflow: hidden; }
+
+.table-row { transition: background 0.15s; }
+
+// Supplier cell
+.supplier-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.supplier-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary-600), var(--primary-400));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.supplier-name { font-weight: 600; color: var(--surface-0); }
+.supplier-code {
+  font-size: 0.78rem;
+  color: var(--text-color-secondary);
+  font-family: monospace;
+  background: rgba(255,255,255,0.05);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+// Contact info
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  .info-row {
+    font-size: 0.82rem;
+    color: var(--text-color-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    .pi { font-size: 0.75rem; color: var(--primary-400); }
+  }
+}
+
+.location {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  .pi { color: var(--primary-400); margin-right: 0.3rem; }
+}
+
+.text-muted { color: var(--text-color-secondary); font-size: 0.85rem; }
+
+.actions-col { width: 110px; }
+
+.action-buttons {
+  display: flex;
+  gap: 0.15rem;
+  justify-content: flex-end;
+}
+
+// Supplier rating stars
+::ng-deep .supplier-rating .p-rating-icon { font-size: 0.95rem !important; }
+::ng-deep .contact-chip .p-chip { font-size: 0.78rem !important; }
+
+// ── Empty state ─────────────────────────────────────────────────
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem !important;
+  color: var(--text-color-secondary);
+
+  .empty-icon { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.4; display: block; }
+  p { margin-bottom: 1rem; }
+}
+
+// ── Form dialog ─────────────────────────────────────────────────
+.form-section { margin-bottom: 0.5rem; }
+
+.section-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--primary-300);
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+
+  .section-title { margin: 0; }
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  label { font-size: 0.82rem; font-weight: 500; color: var(--text-color-secondary); }
+
+  input, p-dropdown, p-inputNumber { width: 100%; }
+
+  &.full-width { grid-column: 1 / -1; }
+  &.checkbox-field { justify-content: flex-end; padding-bottom: 0.25rem; }
+  &.remove-field { justify-content: flex-end; }
+}
+
+.error { color: var(--red-400); font-size: 0.78rem; }
+
+// Contact rows in form
+.contact-row {
+  padding: 0.85rem;
+  border-radius: 8px;
+  margin-bottom: 0.6rem;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.no-contacts {
+  text-align: center;
+  padding: 1.2rem;
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+  border: 1px dashed rgba(255,255,255,0.15);
+  border-radius: 8px;
+}
+
+// ── Detail dialog ───────────────────────────────────────────────
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+
+  .detail-avatar {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary-600), var(--primary-400));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  h2 { margin: 0 0 0.4rem; font-size: 1.2rem; color: var(--surface-0); }
+}
+
+::ng-deep .detail-rating .p-rating-icon { font-size: 1.1rem !important; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--text-color-secondary);
+
+  .pi { color: var(--primary-400); }
+  a { color: var(--primary-300); text-decoration: none; }
+}
+
+.contact-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.contact-card {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.contact-name {
+  font-weight: 600;
+  color: var(--surface-0);
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+}
+
+.contact-details {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: var(--text-color-secondary);
+
+  .pi { color: var(--primary-400); margin-right: 0.25rem; }
+}
+
+.ml-2 { margin-left: 0.5rem !important; }
+
+// ── Responsive ──────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+  .page-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .filter-bar { flex-direction: column; align-items: stretch; }
+  .status-filter { width: 100% !important; }
+}

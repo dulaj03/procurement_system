@@ -10,6 +10,8 @@ import java.util.UUID;
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, UUID> {
     Optional<Company> findByCodeAndDeletedFalse(String code);
+    Optional<Company> findByIdAndIsDeletedFalse(UUID id);
     boolean existsByCode(String code);
     boolean existsByRegistrationNumber(String registrationNumber);
 }
+
